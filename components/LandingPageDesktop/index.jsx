@@ -115,7 +115,7 @@ function LandingPageDesktop(props) {
     vector6,
     button4Props,
     group107Props,
-    group1072Props,
+    // group1072Props,
     group109Props,
     group139Props,
     projectCard2Props,
@@ -183,7 +183,7 @@ function LandingPageDesktop(props) {
               <p className="text-3 typographybody16-regular">{text3}</p>
               <Group107 {...group107Props} />
             </div>
-            <Group107 {...group1072Props} className="group-107" />
+            {/* <Group107 {...group1072Props} className="group-107" /> */}
             <Group109 ourProjects={group109Props.ourProjects} text73={group109Props.text73} />
             <div className="group-104">
               <Group139>{group139Props.children}</Group139>
