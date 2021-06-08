@@ -2,6 +2,7 @@ import React from "react";
 import Group86 from "../Group86";
 import GetAQuoteButton from "../GetAQuoteButton";
 import "./HeaderWithBackground.css";
+import { HashLink as Link } from "react-router-hash-link";
 
 function HeaderWithBackground(props) {
   const { place, text41, text42, text43, text44, text45, text46, text47, group86Props, getAQuoteButtonProps } = props;
@@ -18,7 +19,10 @@ function HeaderWithBackground(props) {
                 <div className="place-3 valign-text-middle typographybodycaption-14-semi-bold">{place}</div>
               </div>
             </div>
-            <div className="text-41 valign-text-middle typographybodycaption-14-semi-bold">{text41}</div>
+            <div className="text-41 valign-text-middle typographybodycaption-14-semi-bold">
+            <Link
+            to="/test">{text41}
+              </Link></div>
             <div className="text-42 valign-text-middle typographybodycaption-14-semi-bold">{text42}</div>
             <div className="text-43 valign-text-middle typographybodycaption-14-semi-bold">{text43}</div>
             <div className="text-44 valign-text-middle typographybodycaption-14-semi-bold">{text44}</div>

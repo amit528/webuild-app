@@ -37300,7 +37300,223 @@ var reloadCSS = require('_css_loader');
 
 module.hot.dispose(reloadCSS);
 module.hot.accept(reloadCSS);
-},{"_css_loader":"node_modules/parcel-bundler/src/builtins/css-loader.js"}],"components/HeaderWithBackground/index.jsx":[function(require,module,exports) {
+},{"_css_loader":"node_modules/parcel-bundler/src/builtins/css-loader.js"}],"node_modules/react-router-hash-link/dist/react-router-hash-link.esm.js":[function(require,module,exports) {
+"use strict";
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+exports.genericHashLink = genericHashLink;
+exports.NavHashLink = exports.HashLink = void 0;
+
+var _react = _interopRequireDefault(require("react"));
+
+var _propTypes = _interopRequireDefault(require("prop-types"));
+
+var _reactRouterDom = require("react-router-dom");
+
+function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+
+/*! *****************************************************************************
+Copyright (c) Microsoft Corporation.
+
+Permission to use, copy, modify, and/or distribute this software for any
+purpose with or without fee is hereby granted.
+
+THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL WARRANTIES WITH
+REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF MERCHANTABILITY
+AND FITNESS. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR ANY SPECIAL, DIRECT,
+INDIRECT, OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES WHATSOEVER RESULTING FROM
+LOSS OF USE, DATA OR PROFITS, WHETHER IN AN ACTION OF CONTRACT, NEGLIGENCE OR
+OTHER TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR
+PERFORMANCE OF THIS SOFTWARE.
+***************************************************************************** */
+var __assign = function () {
+  __assign = Object.assign || function __assign(t) {
+    for (var s, i = 1, n = arguments.length; i < n; i++) {
+      s = arguments[i];
+
+      for (var p in s) if (Object.prototype.hasOwnProperty.call(s, p)) t[p] = s[p];
+    }
+
+    return t;
+  };
+
+  return __assign.apply(this, arguments);
+};
+
+function __rest(s, e) {
+  var t = {};
+
+  for (var p in s) if (Object.prototype.hasOwnProperty.call(s, p) && e.indexOf(p) < 0) t[p] = s[p];
+
+  if (s != null && typeof Object.getOwnPropertySymbols === "function") for (var i = 0, p = Object.getOwnPropertySymbols(s); i < p.length; i++) {
+    if (e.indexOf(p[i]) < 0 && Object.prototype.propertyIsEnumerable.call(s, p[i])) t[p[i]] = s[p[i]];
+  }
+  return t;
+}
+
+var hashFragment = '';
+var observer = null;
+var asyncTimerId = null;
+var scrollFunction = null;
+
+function reset() {
+  hashFragment = '';
+  if (observer !== null) observer.disconnect();
+
+  if (asyncTimerId !== null) {
+    window.clearTimeout(asyncTimerId);
+    asyncTimerId = null;
+  }
+}
+
+function isInteractiveElement(element) {
+  var formTags = ['BUTTON', 'INPUT', 'SELECT', 'TEXTAREA'];
+  var linkTags = ['A', 'AREA'];
+  return formTags.includes(element.tagName) && !element.hasAttribute('disabled') || linkTags.includes(element.tagName) && element.hasAttribute('href');
+}
+
+function getElAndScroll() {
+  var element = null;
+
+  if (hashFragment === '#') {
+    // use document.body instead of document.documentElement because of a bug in smoothscroll-polyfill in safari
+    // see https://github.com/iamdustan/smoothscroll/issues/138
+    // while smoothscroll-polyfill is not included, it is the recommended way to implement smoothscroll
+    // in browsers that don't natively support el.scrollIntoView({ behavior: 'smooth' })
+    element = document.body;
+  } else {
+    // check for element with matching id before assume '#top' is the top of the document
+    // see https://html.spec.whatwg.org/multipage/browsing-the-web.html#target-element
+    var id = hashFragment.replace('#', '');
+    element = document.getElementById(id);
+
+    if (element === null && hashFragment === '#top') {
+      // see above comment for why document.body instead of document.documentElement
+      element = document.body;
+    }
+  }
+
+  if (element !== null) {
+    scrollFunction(element); // update focus to where the page is scrolled to
+    // unfortunately this doesn't work in safari (desktop and iOS) when blur() is called
+
+    var originalTabIndex = element.getAttribute('tabindex');
+
+    if (originalTabIndex === null && !isInteractiveElement(element)) {
+      element.setAttribute('tabindex', -1);
+    }
+
+    element.focus({
+      preventScroll: true
+    });
+
+    if (originalTabIndex === null && !isInteractiveElement(element)) {
+      // for some reason calling blur() in safari resets the focus region to where it was previously,
+      // if blur() is not called it works in safari, but then are stuck with default focus styles
+      // on an element that otherwise might never had focus styles applied, so not an option
+      element.blur();
+      element.removeAttribute('tabindex');
+    }
+
+    reset();
+    return true;
+  }
+
+  return false;
+}
+
+function hashLinkScroll(timeout) {
+  // Push onto callback queue so it runs after the DOM is updated
+  window.setTimeout(function () {
+    if (getElAndScroll() === false) {
+      if (observer === null) {
+        observer = new MutationObserver(getElAndScroll);
+      }
+
+      observer.observe(document, {
+        attributes: true,
+        childList: true,
+        subtree: true
+      }); // if the element doesn't show up in specified timeout or 10 seconds, stop checking
+
+      asyncTimerId = window.setTimeout(function () {
+        reset();
+      }, timeout || 10000);
+    }
+  }, 0);
+}
+
+function genericHashLink(As) {
+  return _react.default.forwardRef(function (props, ref) {
+    var linkHash = '';
+
+    if (typeof props.to === 'string' && props.to.includes('#')) {
+      linkHash = "#" + props.to.split('#').slice(1).join('#');
+    } else if (typeof props.to === 'object' && typeof props.to.hash === 'string') {
+      linkHash = props.to.hash;
+    }
+
+    var passDownProps = {};
+
+    if (As === _reactRouterDom.NavLink) {
+      passDownProps.isActive = function (match, location) {
+        return match && match.isExact && location.hash === linkHash;
+      };
+    }
+
+    function handleClick(e) {
+      reset();
+      hashFragment = props.elementId ? "#" + props.elementId : linkHash;
+      if (props.onClick) props.onClick(e);
+
+      if (hashFragment !== '' && // ignore non-vanilla click events, same as react-router
+      // below logic adapted from react-router: https://github.com/ReactTraining/react-router/blob/fc91700e08df8147bd2bb1be19a299cbb14dbcaa/packages/react-router-dom/modules/Link.js#L43-L48
+      !e.defaultPrevented && // onClick prevented default
+      e.button === 0 && ( // ignore everything but left clicks
+      !props.target || props.target === '_self') && // let browser handle "target=_blank" etc
+      !(e.metaKey || e.altKey || e.ctrlKey || e.shiftKey) // ignore clicks with modifier keys
+      ) {
+          scrollFunction = props.scroll || function (el) {
+            return props.smooth ? el.scrollIntoView({
+              behavior: 'smooth'
+            }) : el.scrollIntoView();
+          };
+
+          hashLinkScroll(props.timeout);
+        }
+    }
+
+    var filteredProps = __rest(props, ["scroll", "smooth", "timeout", "elementId"]);
+
+    return _react.default.createElement(As, __assign({}, passDownProps, filteredProps, {
+      onClick: handleClick,
+      ref: ref
+    }), props.children);
+  });
+}
+
+var HashLink = genericHashLink(_reactRouterDom.Link);
+exports.HashLink = HashLink;
+var NavHashLink = genericHashLink(_reactRouterDom.NavLink);
+exports.NavHashLink = NavHashLink;
+
+if ("development" !== 'production') {
+  HashLink.displayName = 'HashLink';
+  NavHashLink.displayName = 'NavHashLink';
+  var propTypes = {
+    onClick: _propTypes.default.func,
+    children: _propTypes.default.node,
+    scroll: _propTypes.default.func,
+    timeout: _propTypes.default.number,
+    elementId: _propTypes.default.string,
+    to: _propTypes.default.oneOfType([_propTypes.default.string, _propTypes.default.object])
+  };
+  HashLink.propTypes = propTypes;
+  NavHashLink.propTypes = propTypes;
+}
+},{"react":"node_modules/react/index.js","prop-types":"node_modules/prop-types/index.js","react-router-dom":"node_modules/react-router-dom/esm/react-router-dom.js"}],"components/HeaderWithBackground/index.jsx":[function(require,module,exports) {
 "use strict";
 
 Object.defineProperty(exports, "__esModule", {
@@ -37315,6 +37531,8 @@ var _Group = _interopRequireDefault(require("../Group86"));
 var _GetAQuoteButton = _interopRequireDefault(require("../GetAQuoteButton"));
 
 require("./HeaderWithBackground.css");
+
+var _reactRouterHashLink = require("react-router-hash-link");
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
@@ -37351,7 +37569,9 @@ function HeaderWithBackground(props) {
     className: "place-3 valign-text-middle typographybodycaption-14-semi-bold"
   }, place))), /*#__PURE__*/_react.default.createElement("div", {
     className: "text-41 valign-text-middle typographybodycaption-14-semi-bold"
-  }, text41), /*#__PURE__*/_react.default.createElement("div", {
+  }, /*#__PURE__*/_react.default.createElement(_reactRouterHashLink.HashLink, {
+    to: "/test"
+  }, text41)), /*#__PURE__*/_react.default.createElement("div", {
     className: "text-42 valign-text-middle typographybodycaption-14-semi-bold"
   }, text42), /*#__PURE__*/_react.default.createElement("div", {
     className: "text-43 valign-text-middle typographybodycaption-14-semi-bold"
@@ -37368,7 +37588,7 @@ function HeaderWithBackground(props) {
 
 var _default = HeaderWithBackground;
 exports.default = _default;
-},{"react":"node_modules/react/index.js","../Group86":"components/Group86/index.jsx","../GetAQuoteButton":"components/GetAQuoteButton/index.jsx","./HeaderWithBackground.css":"components/HeaderWithBackground/HeaderWithBackground.css"}],"components/LandingPageDesktop/LandingPageDesktop.css":[function(require,module,exports) {
+},{"react":"node_modules/react/index.js","../Group86":"components/Group86/index.jsx","../GetAQuoteButton":"components/GetAQuoteButton/index.jsx","./HeaderWithBackground.css":"components/HeaderWithBackground/HeaderWithBackground.css","react-router-hash-link":"node_modules/react-router-hash-link/dist/react-router-hash-link.esm.js"}],"components/LandingPageDesktop/LandingPageDesktop.css":[function(require,module,exports) {
 var reloadCSS = require('_css_loader');
 
 module.hot.dispose(reloadCSS);
@@ -37986,7 +38206,25 @@ function LandingPageDesktop(props) {
 
 var _default = LandingPageDesktop;
 exports.default = _default;
-},{"react":"node_modules/react/index.js","../Button4":"components/Button4/index.jsx","../Group107":"components/Group107/index.jsx","../Group109":"components/Group109/index.jsx","../Group139":"components/Group139/index.jsx","../ProjectCard2":"components/ProjectCard2/index.jsx","../Button22":"components/Button22/index.jsx","../PackageCard":"components/PackageCard/index.jsx","../Group1112":"components/Group1112/index.jsx","../Group1122":"components/Group1122/index.jsx","../Group113":"components/Group113/index.jsx","../Group272":"components/Group272/index.jsx","../Group129":"components/Group129/index.jsx","../Button3":"components/Button3/index.jsx","../Frame12":"components/Frame12/index.jsx","../Group86":"components/Group86/index.jsx","../HeaderWithBackground":"components/HeaderWithBackground/index.jsx","./LandingPageDesktop.css":"components/LandingPageDesktop/LandingPageDesktop.css"}],"App.jsx":[function(require,module,exports) {
+},{"react":"node_modules/react/index.js","../Button4":"components/Button4/index.jsx","../Group107":"components/Group107/index.jsx","../Group109":"components/Group109/index.jsx","../Group139":"components/Group139/index.jsx","../ProjectCard2":"components/ProjectCard2/index.jsx","../Button22":"components/Button22/index.jsx","../PackageCard":"components/PackageCard/index.jsx","../Group1112":"components/Group1112/index.jsx","../Group1122":"components/Group1122/index.jsx","../Group113":"components/Group113/index.jsx","../Group272":"components/Group272/index.jsx","../Group129":"components/Group129/index.jsx","../Button3":"components/Button3/index.jsx","../Frame12":"components/Frame12/index.jsx","../Group86":"components/Group86/index.jsx","../HeaderWithBackground":"components/HeaderWithBackground/index.jsx","./LandingPageDesktop.css":"components/LandingPageDesktop/LandingPageDesktop.css"}],"test.js":[function(require,module,exports) {
+"use strict";
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+exports.default = void 0;
+
+var _react = _interopRequireDefault(require("react"));
+
+function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+
+function Test() {
+  return /*#__PURE__*/_react.default.createElement(_react.default.Fragment, null, /*#__PURE__*/_react.default.createElement("h1", null, "test page"));
+}
+
+var _default = Test;
+exports.default = _default;
+},{"react":"node_modules/react/index.js"}],"App.jsx":[function(require,module,exports) {
 "use strict";
 
 Object.defineProperty(exports, "__esModule", {
@@ -38002,12 +38240,17 @@ var _reactRouterDom = require("react-router-dom");
 
 var _LandingPageDesktop = _interopRequireDefault(require("./components/LandingPageDesktop"));
 
+var _test = _interopRequireDefault(require("./test"));
+
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
 function App() {
   return /*#__PURE__*/_react.default.createElement(_reactRouterDom.BrowserRouter, null, /*#__PURE__*/_react.default.createElement(_reactRouterDom.Switch, null, /*#__PURE__*/_react.default.createElement(_reactRouterDom.Route, {
+    exact: true,
     path: "/:path(|landing-page-desktop)"
-  }, /*#__PURE__*/_react.default.createElement(_LandingPageDesktop.default, landingPageDesktopData))));
+  }, /*#__PURE__*/_react.default.createElement(_LandingPageDesktop.default, landingPageDesktopData)), /*#__PURE__*/_react.default.createElement(_reactRouterDom.Route, {
+    path: "/test"
+  }, /*#__PURE__*/_react.default.createElement(_test.default, null))));
 }
 
 var _default = App;
@@ -38440,7 +38683,7 @@ var landingPageDesktopData = {
   group86Props: group86Data,
   headerWithBackgroundProps: headerWithBackgroundData
 };
-},{"./App.css":"App.css","react":"node_modules/react/index.js","react-router-dom":"node_modules/react-router-dom/esm/react-router-dom.js","./components/LandingPageDesktop":"components/LandingPageDesktop/index.jsx"}],"styleguide.css":[function(require,module,exports) {
+},{"./App.css":"App.css","react":"node_modules/react/index.js","react-router-dom":"node_modules/react-router-dom/esm/react-router-dom.js","./components/LandingPageDesktop":"components/LandingPageDesktop/index.jsx","./test":"test.js"}],"styleguide.css":[function(require,module,exports) {
 var reloadCSS = require('_css_loader');
 
 module.hot.dispose(reloadCSS);
